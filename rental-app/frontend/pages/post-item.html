@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Post Item — RentaHub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<nav class="navbar" id="navbar">
+  <div class="nav-inner">
+    <a href="../index.html" class="logo">Renta<span>Hub</span></a>
+    <div class="nav-links">
+      <a href="../index.html">Explore</a>
+      <a href="post-item.html">Post Item</a>
+      <a href="dashboard.html">Dashboard</a>
+    </div>
+    <div class="nav-actions">
+      <div id="nav-auth">
+        <button class="btn-outline" onclick="openModal('login')">Login</button>
+        <button class="btn-primary" onclick="openModal('register')">Sign Up</button>
+      </div>
+      <div id="nav-user" style="display:none">
+        <div class="user-menu" onclick="toggleUserMenu()">
+          <img src="" alt="" class="user-avatar" id="nav-avatar">
+          <span id="nav-username"></span>
+        </div>
+        <div class="user-dropdown" id="user-dropdown">
+          <a href="dashboard.html">Dashboard</a>
+          <a href="post-item.html">Post Item</a>
+          <a href="profile.html">Profile</a>
+          <hr>
+          <a href="#" onclick="logout()">Logout</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="container">
+    <h1 id="form-title">Post an Item</h1>
+    <p>List your item for rent or sale and start earning</p>
+  </div>
+</div>
+
+<section class="section" style="padding-top:40px">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:32px;align-items:start">
+
+      <div class="post-form">
+        <div class="form-section-title">Item Details</div>
+
+        <div class="form-group">
+          <label>Title *</label>
+          <input type="text" id="item-title" placeholder="e.g. Sony A7III Camera with 24-70mm Lens">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Category *</label>
+            <select id="item-category">
+              <option value="">Select Category</option>
+              <option>Electronics</option>
+              <option>Vehicles</option>
+              <option>Tools</option>
+              <option>Furniture</option>
+              <option>Sports</option>
+              <option>Clothing</option>
+              <option>Books</option>
+              <option>Cameras</option>
+              <option>Music</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Condition *</label>
+            <select id="item-condition">
+              <option>New</option>
+              <option>Like New</option>
+              <option selected>Good</option>
+              <option>Fair</option>
+              <option>Poor</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Description *</label>
+          <textarea id="item-desc" rows="4" placeholder="Describe your item in detail. Include features, specs, what's included, any wear or damage..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Location *</label>
+          <input type="text" id="item-location" placeholder="Mumbai, Maharashtra">
+        </div>
+
+        <div class="form-group">
+          <label>Tags (comma separated)</label>
+          <input type="text" id="item-tags" placeholder="camera, sony, mirrorless, photography">
+        </div>
+
+        <div class="form-section-title" style="margin-top:24px">Availability & Pricing</div>
+
+        <div class="form-group">
+          <label>Available for</label>
+          <div class="checkbox-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="avail-rent" checked onchange="togglePricing()"> For Rent
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="avail-sale" onchange="togglePricing()"> For Sale
+            </label>
+          </div>
+        </div>
+
+        <div id="rent-pricing">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Price per Day (₹) *</label>
+              <input type="number" id="price-day" placeholder="500" min="0">
+            </div>
+            <div class="form-group">
+              <label>Price per Week (₹)</label>
+              <input type="number" id="price-week" placeholder="3000" min="0">
+            </div>
+          </div>
+          <div class="form-group" style="max-width:50%">
+            <label>Price per Month (₹)</label>
+            <input type="number" id="price-month" placeholder="10000" min="0">
+          </div>
+        </div>
+
+        <div id="sale-pricing" style="display:none">
+          <div class="form-group" style="max-width:50%">
+            <label>Sale Price (₹) *</label>
+            <input type="number" id="price-sale" placeholder="25000" min="0">
+          </div>
+        </div>
+
+        <div class="form-section-title" style="margin-top:24px">Photos</div>
+        <div class="image-upload-area" onclick="document.getElementById('img-upload').click()">
+          <input type="file" id="img-upload" multiple accept="image/*" onchange="previewImages(event)">
+          <div class="upload-icon">📷</div>
+          <div style="font-weight:600;margin-bottom:6px">Click to upload images</div>
+          <div style="font-size:13px;color:var(--text-2)">Up to 5 photos, max 5MB each · JPG, PNG, WEBP</div>
+        </div>
+        <div class="image-previews" id="image-previews"></div>
+
+        <div id="post-error" class="form-error" style="margin-top:16px"></div>
+
+        <div style="display:flex;gap:12px;margin-top:24px">
+          <button class="btn-primary" onclick="submitItem()" id="submit-btn">
+            <span id="submit-text">Post Item</span>
+          </button>
+          <a href="dashboard.html" class="btn-outline">Cancel</a>
+        </div>
+      </div>
+
+      <div>
+        <div style="background:white;border:1px solid var(--gray-2);border-radius:var(--radius);padding:24px;position:sticky;top:90px">
+          <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">💡 Tips for a great listing</h3>
+          <div style="font-size:14px;color:var(--text-2);line-height:1.8">
+            <p>✅ Use clear, high-quality photos</p>
+            <p>✅ Write a detailed description</p>
+            <p>✅ Set competitive pricing</p>
+            <p>✅ Include brand, model, specs</p>
+            <p>✅ Mention any accessories included</p>
+            <p>✅ Be honest about the condition</p>
+          </div>
+
+          <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--gray-2)">
+            <h4 style="font-size:14px;font-weight:700;margin-bottom:12px">Pricing suggestions</h4>
+            <div style="font-size:13px;color:var(--text-2)">
+              <p>📷 Camera: ₹800-2000/day</p>
+              <p>🚗 Car: ₹1500-4000/day</p>
+              <p>🔧 Tools: ₹200-600/day</p>
+              <p>🎸 Guitar: ₹300-800/day</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div id="modal-login">
+      <div class="modal-header"><h2>Login Required</h2><button class="modal-close" onclick="closeModal()">×</button></div>
+      <div class="modal-body">
+        <div class="form-group"><label>Email</label><input type="email" id="login-email"></div>
+        <div class="form-group"><label>Password</label><input type="password" id="login-pass"></div>
+        <div id="login-error" class="form-error"></div>
+        <button class="btn-primary full-width" onclick="login()">Login</button>
+        <p class="modal-switch">No account? <a href="#" onclick="openModal('register')">Sign Up</a></p>
+      </div>
+    </div>
+    <div id="modal-register" style="display:none">
+      <div class="modal-header"><h2>Create Account</h2><button class="modal-close" onclick="closeModal()">×</button></div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group"><label>Name</label><input type="text" id="reg-name"></div>
+          <div class="form-group"><label>Phone</label><input type="text" id="reg-phone"></div>
+        </div>
+        <div class="form-group"><label>Email</label><input type="email" id="reg-email"></div>
+        <div class="form-group"><label>Location</label><input type="text" id="reg-location"></div>
+        <div class="form-group"><label>Password</label><input type="password" id="reg-pass"></div>
+        <div id="reg-error" class="form-error"></div>
+        <button class="btn-primary full-width" onclick="register()">Sign Up</button>
+        <p class="modal-switch">Have account? <a href="#" onclick="openModal('login')">Login</a></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+  let editId = null;
+  let selectedFiles = [];
+
+  // Check if editing
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('edit')) {
+    editId = urlParams.get('edit');
+    document.getElementById('form-title').textContent = 'Edit Item';
+    document.getElementById('submit-text').textContent = 'Update Item';
+    loadItemForEdit(editId);
+  }
+
+  async function loadItemForEdit(id) {
+    try {
+      const item = await api.get('/items/' + id);
+      document.getElementById('item-title').value = item.title;
+      document.getElementById('item-category').value = item.category;
+      document.getElementById('item-condition').value = item.condition;
+      document.getElementById('item-desc').value = item.description;
+      document.getElementById('item-location').value = item.location;
+      document.getElementById('item-tags').value = item.tags?.join(', ') || '';
+      document.getElementById('avail-rent').checked = item.availableForRent;
+      document.getElementById('avail-sale').checked = item.availableForSale;
+      document.getElementById('price-day').value = item.pricePerDay || '';
+      document.getElementById('price-week').value = item.pricePerWeek || '';
+      document.getElementById('price-month').value = item.pricePerMonth || '';
+      document.getElementById('price-sale').value = item.salePrice || '';
+      togglePricing();
+    } catch (err) { showToast(err.message, 'error'); }
+  }
+
+  function togglePricing() {
+    const rentChecked = document.getElementById('avail-rent').checked;
+    const saleChecked = document.getElementById('avail-sale').checked;
+    document.getElementById('rent-pricing').style.display = rentChecked ? 'block' : 'none';
+    document.getElementById('sale-pricing').style.display = saleChecked ? 'block' : 'none';
+  }
+
+  function previewImages(e) {
+    const files = Array.from(e.target.files).slice(0, 5);
+    selectedFiles = files;
+    const prev = document.getElementById('image-previews');
+    prev.innerHTML = files.map((f, i) => `
+      <div style="position:relative">
+        <img src="${URL.createObjectURL(f)}" class="image-preview" style="width:80px;height:80px;border-radius:8px;object-fit:cover">
+        <button onclick="removeImg(${i})" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:var(--danger);color:white;border:none;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center">×</button>
+      </div>`).join('');
+  }
+
+  function removeImg(idx) {
+    selectedFiles.splice(idx, 1);
+    const dt = new DataTransfer();
+    selectedFiles.forEach(f => dt.items.add(f));
+    document.getElementById('img-upload').files = dt.files;
+    previewImages({ target: { files: selectedFiles } });
+  }
+
+  async function submitItem() {
+    if (!isLoggedIn()) { openModal('login'); return; }
+    const errEl = document.getElementById('post-error');
+    errEl.textContent = '';
+
+    const title = document.getElementById('item-title').value.trim();
+    const category = document.getElementById('item-category').value;
+    const desc = document.getElementById('item-desc').value.trim();
+    const location = document.getElementById('item-location').value.trim();
+    const rentChecked = document.getElementById('avail-rent').checked;
+    const saleChecked = document.getElementById('avail-sale').checked;
+    const priceDay = document.getElementById('price-day').value;
+    const priceSale = document.getElementById('price-sale').value;
+
+    if (!title) { errEl.textContent = 'Please enter a title'; return; }
+    if (!category) { errEl.textContent = 'Please select a category'; return; }
+    if (!desc) { errEl.textContent = 'Please enter a description'; return; }
+    if (!location) { errEl.textContent = 'Please enter a location'; return; }
+    if (!rentChecked && !saleChecked) { errEl.textContent = 'Select at least one: rent or sale'; return; }
+    if (rentChecked && !priceDay) { errEl.textContent = 'Please enter price per day for rental'; return; }
+    if (saleChecked && !priceSale) { errEl.textContent = 'Please enter a sale price'; return; }
+
+    const fd = new FormData();
+    fd.append('title', title);
+    fd.append('category', category);
+    fd.append('condition', document.getElementById('item-condition').value);
+    fd.append('description', desc);
+    fd.append('location', location);
+    fd.append('availableForRent', rentChecked);
+    fd.append('availableForSale', saleChecked);
+    fd.append('pricePerDay', priceDay || 0);
+    fd.append('pricePerWeek', document.getElementById('price-week').value || '');
+    fd.append('pricePerMonth', document.getElementById('price-month').value || '');
+    fd.append('salePrice', priceSale || '');
+    fd.append('tags', document.getElementById('item-tags').value);
+
+    const fileInput = document.getElementById('img-upload');
+    for (const f of fileInput.files) fd.append('images', f);
+
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    document.getElementById('submit-text').textContent = editId ? 'Updating...' : 'Posting...';
+
+    try {
+      if (editId) {
+        await api.put('/items/' + editId, fd, true);
+        showToast('Item updated!', 'success');
+      } else {
+        await api.post('/items', fd, true);
+        showToast('Item posted!', 'success');
+      }
+      setTimeout(() => window.location.href = 'dashboard.html', 1200);
+    } catch (err) {
+      errEl.textContent = err.message;
+      btn.disabled = false;
+      document.getElementById('submit-text').textContent = editId ? 'Update Item' : 'Post Item';
+    }
+  }
+</script>
+</body>
+</html>

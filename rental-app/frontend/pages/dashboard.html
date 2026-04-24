@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — RentaHub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<nav class="navbar" id="navbar">
+  <div class="nav-inner"> 
+    <a href="../index.html" class="logo">Renta<span>Hub</span></a>
+    <div class="nav-links">
+      <a href="../index.html">Explore</a>
+      <a href="post-item.html">Post Item</a>
+      <a href="dashboard.html">Dashboard</a>
+    </div>
+    <div class="nav-actions">
+      <div id="nav-auth">
+        <button class="btn-outline" onclick="openModal('login')">Login</button>
+        <button class="btn-primary" onclick="openModal('register')">Sign Up</button>
+      </div>
+      <div id="nav-user" style="display:none">
+        <div class="user-menu" onclick="toggleUserMenu()">
+          <img src="" alt="" class="user-avatar" id="nav-avatar">
+          <span id="nav-username"></span>
+        </div>
+        <div class="user-dropdown" id="user-dropdown">
+          <a href="dashboard.html">Dashboard</a>
+          <a href="post-item.html">Post Item</a>
+          <a href="profile.html">Profile</a>
+          <hr>
+          <a href="#" onclick="logout()">Logout</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="container">
+    <h1>Dashboard</h1>
+    <p>Manage your listings, rentals, and requests</p>
+  </div>
+</div>
+
+<section class="section" style="padding-top:40px">
+  <div class="container">
+
+    <div class="stats-row" id="stats-row">
+      <div class="stat-card"><div class="stat-card-icon">📦</div><div class="stat-card-num" id="st-listings">—</div><div class="stat-card-label">My Listings</div></div>
+      <div class="stat-card"><div class="stat-card-icon">🔑</div><div class="stat-card-num" id="st-rentals">—</div><div class="stat-card-label">My Rentals</div></div>
+      <div class="stat-card"><div class="stat-card-icon">📥</div><div class="stat-card-num" id="st-requests">—</div><div class="stat-card-label">Pending Requests</div></div>
+      <div class="stat-card"><div class="stat-card-icon">💰</div><div class="stat-card-num" id="st-earnings">—</div><div class="stat-card-label">Total Earned</div></div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('my-items')">My Listings</button>
+      <button class="tab" onclick="showTab('my-rentals')">My Rentals</button>
+      <button class="tab" onclick="showTab('requests')">Requests</button>
+    </div>
+
+    <!-- MY ITEMS -->
+    <div id="tab-my-items">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+        <h3 style="font-size:18px;font-weight:700">My Listings</h3>
+        <a href="post-item.html" class="btn-primary">+ Post New Item</a>
+      </div>
+      <div id="my-items-list"><div class="loading-state"><div class="spinner"></div></div></div>
+    </div>
+
+    <!-- MY RENTALS -->
+    <div id="tab-my-rentals" style="display:none">
+      <h3 style="font-size:18px;font-weight:700;margin-bottom:20px">My Rental & Purchase Requests</h3>
+      <div id="my-rentals-list"><div class="loading-state"><div class="spinner"></div></div></div>
+    </div>
+
+    <!-- REQUESTS -->
+    <div id="tab-requests" style="display:none">
+      <h3 style="font-size:18px;font-weight:700;margin-bottom:20px">Requests for My Items</h3>
+      <div id="requests-list"><div class="loading-state"><div class="spinner"></div></div></div>
+    </div>
+  </div>
+</section>
+
+<div class="toast" id="toast"></div>
+
+<!-- Review Modal -->
+<div class="modal-overlay" id="review-modal" onclick="closeReviewModal()">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:420px">
+    <div class="modal-header">
+      <h2>Leave a Review</h2>
+      <button class="modal-close" onclick="closeReviewModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Rating</label>
+        <!-- FIX: star buttons are rendered by JS below, not via template literal in HTML -->
+        <div class="star-select" id="star-select"></div>
+      </div>
+      <div class="form-group">
+        <label>Comment</label>
+        <textarea id="review-comment" rows="3" placeholder="Share your experience..."></textarea>
+      </div>
+      <div id="review-error" class="form-error"></div>
+      <button class="btn-primary full-width" onclick="submitReview()">Submit Review</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+  let currentReviewRentalId = null;
+  let selectedRating = 0;
+
+  // FIX: render star buttons via JS so template literals are evaluated correctly
+  document.getElementById('star-select').innerHTML = [1,2,3,4,5].map(i =>
+    `<span class="star-btn" data-val="${i}" onclick="setRating(${i})" style="font-size:28px;cursor:pointer;color:var(--gray-2)">★</span>`
+  ).join('');
+
+  function requireAuth() {
+    if (!isLoggedIn()) window.location.href = '../index.html';
+  }
+  requireAuth();
+
+  function showTab(name) {
+    ['my-items','my-rentals','requests'].forEach(t => {
+      document.getElementById('tab-' + t).style.display = t === name ? 'block' : 'none';
+    });
+    document.querySelectorAll('.tab').forEach((t, i) => {
+      t.classList.toggle('active', ['my-items','my-rentals','requests'][i] === name);
+    });
+    if (name === 'my-items' && !document.getElementById('my-items-list').dataset.loaded) loadMyItems();
+    if (name === 'my-rentals' && !document.getElementById('my-rentals-list').dataset.loaded) loadMyRentals();
+    if (name === 'requests' && !document.getElementById('requests-list').dataset.loaded) loadRequests();
+  }
+
+  async function loadDashboard() {
+    const [itemsRes, rentalsRes, requestsRes] = await Promise.allSettled([
+      api.get('/items/user/' + JSON.parse(localStorage.getItem('user')).id),
+      api.get('/rentals/my-rentals'),
+      api.get('/rentals/my-requests'),
+    ]);
+    const items = itemsRes.status === 'fulfilled' ? itemsRes.value : [];
+    const rentals = rentalsRes.status === 'fulfilled' ? rentalsRes.value : [];
+    const reqs = requestsRes.status === 'fulfilled' ? requestsRes.value : [];
+
+    document.getElementById('st-listings').textContent = items.length;
+    document.getElementById('st-rentals').textContent = rentals.length;
+    document.getElementById('st-requests').textContent = reqs.filter(r => r.status === 'pending').length;
+    const earned = reqs.filter(r => ['approved','completed','active'].includes(r.status)).reduce((s,r) => s+r.totalAmount, 0);
+    document.getElementById('st-earnings').textContent = '₹' + earned.toLocaleString();
+  }
+
+  async function loadMyItems() {
+    const el = document.getElementById('my-items-list');
+    el.dataset.loaded = '1';
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+      const items = await api.get('/items/user/' + user.id);
+      if (!items.length) { el.innerHTML = '<div class="empty-state"><h3>No listings yet</h3><p><a href="post-item.html" style="color:var(--primary)">Post your first item →</a></p></div>'; return; }
+      el.innerHTML = items.map(item => {
+        const imgUrl = item.images?.length ? `http://localhost:5000${item.images[0]}` : null;
+        return `<div class="rental-card">
+          <div class="rental-img">${imgUrl ? `<img src="${imgUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:8px">` : getCategoryIcon(item.category)}</div>
+          <div class="rental-info">
+            <div class="rental-title">${item.title}</div>
+            <div class="rental-meta">📍 ${item.location} · ${item.category} · ${item.condition}</div>
+            <div class="rental-meta">
+              ${item.availableForRent ? `Rent: ₹${Number(item.pricePerDay).toLocaleString()}/day` : ''}
+              ${item.availableForSale && item.salePrice ? ` · Sale: ₹${Number(item.salePrice).toLocaleString()}` : ''}
+              · 👁 ${item.views} views
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+              <span class="status-badge ${item.isSold ? 'status-completed' : item.isAvailable ? 'status-approved' : 'status-cancelled'}">${item.isSold ? 'Sold' : item.isAvailable ? 'Active' : 'Unavailable'}</span>
+              <span style="font-size:12px;color:var(--text-2)">Posted ${formatDate(item.createdAt)}</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0">
+            <a href="post-item.html?edit=${item._id}" class="btn-outline" style="font-size:13px;padding:8px 14px">Edit</a>
+            <button onclick="deleteItem('${item._id}', this)" class="btn-danger" style="font-size:13px;padding:8px 14px">Delete</button>
+          </div>
+        </div>`;
+      }).join('');
+    } catch (err) { el.innerHTML = `<div class="empty-state"><p>${err.message}</p></div>`; }
+  }
+
+  async function deleteItem(id, btn) {
+    if (!confirm('Delete this item? This cannot be undone.')) return;
+    try {
+      await api.delete('/items/' + id);
+      btn.closest('.rental-card').remove();
+      showToast('Item deleted', 'success');
+      loadDashboard();
+    } catch (err) { showToast(err.message, 'error'); }
+  }
+
+  async function loadMyRentals() {
+    const el = document.getElementById('my-rentals-list');
+    el.dataset.loaded = '1';
+    try {
+      const rentals = await api.get('/rentals/my-rentals');
+      if (!rentals.length) { el.innerHTML = '<div class="empty-state"><h3>No rentals yet</h3><p>Browse items and make your first request</p></div>'; return; }
+      el.innerHTML = rentals.map(r => {
+        const imgUrl = r.item?.images?.length ? `http://localhost:5000${r.item.images[0]}` : null;
+        const canReview = ['completed','approved'].includes(r.status) && !r.review;
+        const canCancel = ['pending','approved'].includes(r.status);
+        return `<div class="rental-card">
+          <div class="rental-img">${imgUrl ? `<img src="${imgUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:8px">` : getCategoryIcon(r.item?.category)}</div>
+          <div class="rental-info">
+            <div class="rental-title">${r.item?.title || 'Item'}</div>
+            <div class="rental-meta">${r.type === 'rent' ? `📅 ${formatDate(r.startDate)} → ${formatDate(r.endDate)} (${r.totalDays} days)` : '🛒 Purchase'}</div>
+            <div class="rental-meta">Owner: ${r.owner?.name} · Total: <strong>₹${Number(r.totalAmount).toLocaleString()}</strong></div>
+            ${r.ownerResponse ? `<div style="font-size:13px;background:var(--gray-1);padding:8px 12px;border-radius:8px;margin-top:8px">"${r.ownerResponse}"</div>` : ''}
+            ${r.review ? `<div style="font-size:13px;color:var(--text-2);margin-top:6px">Your review: ${renderStars(r.review.rating)} "${r.review.comment}"</div>` : ''}
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;flex-shrink:0">
+            <span class="status-badge status-${r.status}">${r.status}</span>
+            <span style="font-size:12px;color:var(--text-2)">${formatDate(r.createdAt)}</span>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
+              ${canCancel ? `<button class="btn-danger" style="font-size:12px;padding:6px 12px" onclick="cancelRental('${r._id}', this)">Cancel</button>` : ''}
+              ${canReview ? `<button class="btn-success" style="font-size:12px;padding:6px 12px" onclick="openReviewModal('${r._id}')">Review</button>` : ''}
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    } catch (err) { el.innerHTML = `<div class="empty-state"><p>${err.message}</p></div>`; }
+  }
+
+  async function cancelRental(id, btn) {
+    if (!confirm('Cancel this request?')) return;
+    try {
+      await api.put('/rentals/' + id + '/cancel');
+      showToast('Request cancelled', 'warning');
+      btn.closest('.rental-card').querySelector('.status-badge').textContent = 'cancelled';
+      btn.remove();
+    } catch (err) { showToast(err.message, 'error'); }
+  }
+
+  async function loadRequests() {
+    const el = document.getElementById('requests-list');
+    el.dataset.loaded = '1';
+    try {
+      const reqs = await api.get('/rentals/my-requests');
+      if (!reqs.length) { el.innerHTML = '<div class="empty-state"><h3>No requests yet</h3><p>Requests from renters will appear here</p></div>'; return; }
+      el.innerHTML = reqs.map(r => {
+        const imgUrl = r.item?.images?.length ? `http://localhost:5000${r.item.images[0]}` : null;
+        const isPending = r.status === 'pending';
+        return `<div class="rental-card" id="req-${r._id}">
+          <div class="rental-img">${imgUrl ? `<img src="${imgUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:8px">` : getCategoryIcon(r.item?.category)}</div>
+          <div class="rental-info">
+            <div class="rental-title">${r.item?.title}</div>
+            <div class="rental-meta">From: <strong>${r.renter?.name}</strong></div>
+            <div class="rental-meta">${r.type === 'rent' ? `📅 ${formatDate(r.startDate)} → ${formatDate(r.endDate)} (${r.totalDays} days)` : '🛒 Wants to buy'}</div>
+            <div class="rental-meta">Amount: <strong style="color:var(--primary)">₹${Number(r.totalAmount).toLocaleString()}</strong></div>
+            ${r.message ? `<div style="font-size:13px;background:var(--gray-1);padding:8px 12px;border-radius:8px;margin-top:8px">"${r.message}"</div>` : ''}
+            ${isPending ? `
+            <div class="rental-actions">
+              <input id="resp-${r._id}" type="text" placeholder="Response to renter (optional)" style="padding:8px 12px;border:1px solid var(--gray-2);border-radius:6px;font-size:13px;flex:1;min-width:0;font-family:inherit">
+              <button class="btn-success" style="font-size:13px;padding:8px 14px" onclick="updateStatus('${r._id}', 'approved', this)">✓ Approve</button>
+              <button class="btn-danger" style="font-size:13px;padding:8px 14px" onclick="updateStatus('${r._id}', 'rejected', this)">✗ Reject</button>
+            </div>` : ''}
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;flex-shrink:0">
+            <span class="status-badge status-${r.status}">${r.status}</span>
+            <span style="font-size:12px;color:var(--text-2)">${formatDate(r.createdAt)}</span>
+          </div>
+        </div>`;
+      }).join('');
+    } catch (err) { el.innerHTML = `<div class="empty-state"><p>${err.message}</p></div>`; }
+  }
+
+  async function updateStatus(id, status, btn) {
+    const respInput = document.getElementById('resp-' + id);
+    const ownerResponse = respInput?.value || '';
+    try {
+      await api.put('/rentals/' + id + '/status', { status, ownerResponse });
+      document.getElementById('req-' + id).querySelector('.status-badge').textContent = status;
+      document.getElementById('req-' + id).querySelector('.rental-actions')?.remove();
+      showToast(`Request ${status}!`, status === 'approved' ? 'success' : 'warning');
+      loadDashboard();
+    } catch (err) { showToast(err.message, 'error'); }
+  }
+
+  function openReviewModal(rentalId) {
+    currentReviewRentalId = rentalId;
+    selectedRating = 0;
+    document.querySelectorAll('.star-btn').forEach(s => s.style.color = 'var(--gray-2)');
+    document.getElementById('review-comment').value = '';
+    document.getElementById('review-modal').classList.add('open');
+  }
+  function closeReviewModal() { document.getElementById('review-modal').classList.remove('open'); }
+  function setRating(val) {
+    selectedRating = val;
+    document.querySelectorAll('.star-btn').forEach((s, i) => {
+      s.style.color = i < val ? 'var(--warning)' : 'var(--gray-2)';
+    });
+  }
+  async function submitReview() {
+    if (!selectedRating) { document.getElementById('review-error').textContent = 'Please select a rating'; return; }
+    try {
+      await api.post('/rentals/' + currentReviewRentalId + '/review', { rating: selectedRating, comment: document.getElementById('review-comment').value });
+      showToast('Review submitted!', 'success');
+      closeReviewModal();
+      document.getElementById('my-rentals-list').dataset.loaded = '';
+      loadMyRentals();
+    } catch (err) { document.getElementById('review-error').textContent = err.message; }
+  }
+
+  // Init
+  loadDashboard();
+  loadMyItems();
+</script>
+</body>
+</html>

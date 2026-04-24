@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RentaHub — Rent & Buy Anything</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar" id="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="logo">Renta<span>Hub</span></a>
+    <div class="nav-links">
+      <a href="index.html">Explore</a>
+      <a href="pages/post-item.html" id="nav-post">Post Item</a>
+      <a href="pages/dashboard.html" id="nav-dash">Dashboard</a>
+    </div>
+    <div class="nav-actions">
+      <div id="nav-auth">
+        <button class="btn-outline" onclick="openModal('login')">Login</button>
+        <button class="btn-primary" onclick="openModal('register')">Sign Up</button>
+      </div>
+      <div id="nav-user" style="display:none">
+        <div class="user-menu" onclick="toggleUserMenu()">
+          <img src="" alt="" class="user-avatar" id="nav-avatar">
+          <span id="nav-username"></span>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M2 4l4 4 4-4"/></svg>
+        </div>
+        <div class="user-dropdown" id="user-dropdown">
+          <a href="pages/dashboard.html">Dashboard</a>
+          <a href="pages/post-item.html">Post Item</a>
+          <a href="pages/profile.html">Profile</a>
+          <hr>
+          <a href="#" onclick="logout()">Logout</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="hero-badge">🔑 Trusted Marketplace</div>
+    <h1>Rent or Buy<br><span>Anything You Need</span></h1>
+    <p>From cameras to cars — find items available for rent or purchase in your area. Save money, reduce waste, earn from what you own.</p>
+
+    <div class="search-bar">
+      <div class="search-type">
+        <button class="type-btn active" data-type="">All</button>
+        <button class="type-btn" data-type="rent">Rent</button>
+        <button class="type-btn" data-type="buy">Buy</button>
+      </div>
+      <input type="text" id="search-input" placeholder="Search for cameras, tools, bikes...">
+      <select id="search-category">
+        <option value="">All Categories</option>
+        <option>Electronics</option>
+        <option>Vehicles</option>
+        <option>Tools</option>
+        <option>Furniture</option>
+        <option>Sports</option>
+        <option>Clothing</option>
+        <option>Books</option>
+        <option>Cameras</option>
+        <option>Music</option>
+        <option>Other</option>
+      </select>
+      <button class="btn-primary" onclick="searchItems()">Search</button>
+    </div>
+  </div>
+
+  <div class="hero-stats">
+    <div class="stat"><span class="stat-num">10K+</span><span class="stat-label">Items Listed</span></div>
+    <div class="stat"><span class="stat-num">5K+</span><span class="stat-label">Happy Users</span></div>
+    <div class="stat"><span class="stat-num">50+</span><span class="stat-label">Categories</span></div>
+    <div class="stat"><span class="stat-num">₹2Cr+</span><span class="stat-label">Saved by Renters</span></div>
+  </div>
+</section>
+
+<!-- CATEGORIES -->
+<section class="section categories-section">
+  <div class="container">
+    <h2 class="section-title">Browse Categories</h2>
+    <div class="category-grid">
+      <div class="category-card" onclick="filterByCategory('Electronics')">
+        <span class="cat-icon">📱</span>
+        <span>Electronics</span>
+      </div>
+      <div class="category-card" onclick="filterByCategory('Vehicles')">
+        <span class="cat-icon">🚗</span>
+        <span>Vehicles</span>
+      </div>
+      <div class="category-card" onclick="filterByCategory('Tools')">
+        <span class="cat-icon">🔧</span>
+        <span>Tools</span>
+      </div>
+      <div class="category-card" onclick="filterByCategory('Cameras')">
+        <span class="cat-icon">📷</span>
+        <span>Cameras</span>
+      </div>
+      <div class="category-card" onclick="filterByCategory('Sports')">
+        <span class="cat-icon">⚽</span>
+        <span>Sports</span>
+      </div>
+      <div class="category-card" onclick="filterByCategory('Furniture')">
+        <span class="cat-icon">🛋️</span>
+        <span>Furniture</span>
+      </div>
+      <div class="category-card" onclick="filterByCategory('Music')">
+        <span class="cat-icon">🎸</span>
+        <span>Music</span>
+      </div>
+      <div class="category-card" onclick="filterByCategory('Other')">
+        <span class="cat-icon">📦</span>
+        <span>More</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ITEMS -->
+<section class="section" id="items-section">
+  <div class="container">
+    <div class="items-header">
+      <h2 class="section-title" id="items-title">Featured Items</h2>
+      <div class="filter-bar">
+        <select id="sort-select" onchange="loadItems()">
+          <option value="">Latest</option>
+          <option value="price_asc">Price: Low to High</option>
+          <option value="price_desc">Price: High to Low</option>
+          <option value="rating">Top Rated</option>
+          <option value="popular">Most Popular</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="items-grid" id="items-grid">
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading items...</p>
+      </div>
+    </div>
+
+    <div class="pagination" id="pagination"></div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section how-section">
+  <div class="container">
+    <h2 class="section-title">How It Works</h2>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-num">01</div>
+        <h3>Browse & Search</h3>
+        <p>Find the perfect item from thousands of listings near you. Filter by category, price, and availability.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">02</div>
+        <h3>Request & Connect</h3>
+        <p>Send a rental or purchase request to the owner. Discuss details and agree on terms.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">03</div>
+        <h3>Rent or Buy</h3>
+        <p>Get approved, make payment, and receive the item. Enjoy your rental or new purchase!</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">04</div>
+        <h3>Review & Earn</h3>
+        <p>Leave a review after your experience. List your own items and start earning extra income.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- AUTH MODALS -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <!-- LOGIN -->
+    <div id="modal-login">
+      <div class="modal-header">
+        <h2>Welcome Back</h2>
+        <button class="modal-close" onclick="closeModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="login-email" placeholder="your@email.com">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="login-pass" placeholder="••••••••">
+        </div>
+        <div id="login-error" class="form-error"></div>
+        <button class="btn-primary full-width" onclick="login()">Login</button>
+        <p class="modal-switch">Don't have an account? <a href="#" onclick="openModal('register')">Sign Up</a></p>
+      </div>
+    </div>
+
+    <!-- REGISTER -->
+    <div id="modal-register" style="display:none">
+      <div class="modal-header">
+        <h2>Create Account</h2>
+        <button class="modal-close" onclick="closeModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="reg-name" placeholder="John Doe">
+          </div>
+          <div class="form-group">
+            <label>Phone</label>
+            <input type="text" id="reg-phone" placeholder="+91 98765 43210">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="reg-email" placeholder="your@email.com">
+        </div>
+        <div class="form-group">
+          <label>Location / City</label>
+          <input type="text" id="reg-location" placeholder="Mumbai, Maharashtra">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="reg-pass" placeholder="Min 6 characters">
+        </div>
+        <div id="reg-error" class="form-error"></div>
+        <button class="btn-primary full-width" onclick="register()">Create Account</button>
+        <p class="modal-switch">Already have an account? <a href="#" onclick="openModal('login')">Login</a></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ITEM DETAIL MODAL -->
+<div class="modal-overlay" id="item-modal-overlay" onclick="closeItemModal()">
+  <div class="item-modal" onclick="event.stopPropagation()" id="item-modal">
+    <button class="modal-close item-modal-close" onclick="closeItemModal()">×</button>
+    <div id="item-modal-content"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-inner">
+      <div>
+        <div class="logo">Renta<span>Hub</span></div>
+        <p>India's trusted marketplace for renting and buying anything you need.</p>
+      </div>
+      <div>
+        <h4>Quick Links</h4>
+        <a href="#">About Us</a>
+        <a href="#">How It Works</a>
+        <a href="#">Safety Tips</a>
+        <a href="#">Contact</a>
+      </div>
+      <div>
+        <h4>Categories</h4>
+        <a href="#" onclick="filterByCategory('Electronics')">Electronics</a>
+        <a href="#" onclick="filterByCategory('Vehicles')">Vehicles</a>
+        <a href="#" onclick="filterByCategory('Cameras')">Cameras</a>
+        <a href="#" onclick="filterByCategory('Tools')">Tools</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2024 RentaHub. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

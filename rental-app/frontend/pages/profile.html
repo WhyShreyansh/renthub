@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile — RentaHub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<nav class="navbar" id="navbar">
+  <div class="nav-inner">
+    <a href="../index.html" class="logo">Renta<span>Hub</span></a>
+    <div class="nav-links">
+      <a href="../index.html">Explore</a>
+      <a href="post-item.html">Post Item</a>
+      <a href="dashboard.html">Dashboard</a>
+    </div>
+    <div class="nav-actions">
+      <div id="nav-auth"><button class="btn-outline" onclick="openModal('login')">Login</button></div>
+      <div id="nav-user" style="display:none">
+        <div class="user-menu" onclick="toggleUserMenu()">
+          <img src="" alt="" class="user-avatar" id="nav-avatar">
+          <span id="nav-username"></span>
+        </div>
+        <div class="user-dropdown" id="user-dropdown">
+          <a href="dashboard.html">Dashboard</a>
+          <a href="post-item.html">Post Item</a>
+          <a href="profile.html">Profile</a>
+          <hr>
+          <a href="#" onclick="logout()">Logout</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="container">
+    <h1>My Profile</h1>
+    <p>Manage your account settings</p>
+  </div>
+</div>
+
+<section class="section" style="padding-top:40px">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start">
+
+      <div>
+        <div class="profile-header" id="profile-display">
+          <div class="profile-avatar" id="profile-avatar-display">?</div>
+          <div class="profile-info">
+            <h2 id="disp-name">Loading...</h2>
+            <p id="disp-email"></p>
+            <p id="disp-phone"></p>
+            <p id="disp-location"></p>
+            <p id="disp-bio" style="margin-top:8px;color:var(--text-2)"></p>
+            <div class="profile-stats">
+              <div>
+                <div class="profile-stat-val" id="disp-items">—</div>
+                <div class="profile-stat-label">Listings</div>
+              </div>
+              <div>
+                <div class="profile-stat-val" id="disp-rating">—</div>
+                <div class="profile-stat-label">Rating</div>
+              </div>
+              <div>
+                <div class="profile-stat-val" id="disp-joined">—</div>
+                <div class="profile-stat-label">Joined</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="post-form">
+        <div class="form-section-title">Edit Profile</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="prof-name">
+          </div>
+          <div class="form-group">
+            <label>Phone</label>
+            <input type="text" id="prof-phone">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Location / City</label>
+          <input type="text" id="prof-location">
+        </div>
+        <div class="form-group">
+          <label>Bio</label>
+          <textarea id="prof-bio" rows="3" placeholder="Tell others about yourself..."></textarea>
+        </div>
+        <div id="prof-error" class="form-error"></div>
+        <button class="btn-primary" onclick="saveProfile()">Save Changes</button>
+      </div>
+
+    </div>
+
+    <div style="margin-top:40px">
+      <h2 class="section-title" style="font-size:24px">My Listings</h2>
+      <div class="items-grid" id="profile-items"><div class="loading-state"><div class="spinner"></div></div></div>
+    </div>
+  </div>
+</section>
+
+<div class="toast" id="toast"></div>
+
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+  function requireAuth() {
+    if (!isLoggedIn()) window.location.href = '../index.html';
+  }
+  requireAuth();
+
+  async function loadProfile() {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    try {
+      const res = await api.get('/users/' + user.id);
+      const u = res.user;
+
+      document.getElementById('disp-name').textContent = u.name;
+      document.getElementById('disp-email').textContent = '✉️ ' + u.email;
+      document.getElementById('disp-phone').textContent = u.phone ? '📞 ' + u.phone : '';
+      document.getElementById('disp-location').textContent = u.location ? '📍 ' + u.location : '';
+      document.getElementById('disp-bio').textContent = u.bio || '';
+      document.getElementById('disp-items').textContent = res.items.length;
+      document.getElementById('disp-rating').textContent = u.rating ? u.rating.toFixed(1) + '★' : 'New';
+      document.getElementById('disp-joined').textContent = new Date(u.createdAt).getFullYear();
+
+      const avatarEl = document.getElementById('profile-avatar-display');
+      avatarEl.textContent = u.name?.charAt(0).toUpperCase();
+
+      document.getElementById('prof-name').value = u.name || '';
+      document.getElementById('prof-phone').value = u.phone || '';
+      document.getElementById('prof-location').value = u.location || '';
+      document.getElementById('prof-bio').value = u.bio || '';
+
+      renderProfileItems(res.items);
+    } catch (err) { showToast(err.message, 'error'); }
+  }
+
+  function renderProfileItems(items) {
+    const grid = document.getElementById('profile-items');
+    if (!items.length) { grid.innerHTML = '<div class="empty-state"><h3>No listings yet</h3><p><a href="post-item.html" style="color:var(--primary)">Post your first item</a></p></div>'; return; }
+    grid.innerHTML = items.map(item => {
+      const imgUrl = item.images?.length ? `http://localhost:5000${item.images[0]}` : null;
+      return `<div class="item-card" onclick="window.location.href='dashboard.html'">
+        <div class="item-img-wrap">
+          ${imgUrl ? `<img src="${imgUrl}" alt="${item.title}" loading="lazy">` : `<div class="item-img-placeholder">${getCategoryIcon(item.category)}</div>`}
+          <div class="item-badges">
+            ${item.availableForRent ? '<span class="badge badge-rent">Rent</span>' : ''}
+            ${item.availableForSale ? '<span class="badge badge-buy">Buy</span>' : ''}
+          </div>
+        </div>
+        <div class="item-body">
+          <div class="item-category">${item.category}</div>
+          <div class="item-title">${item.title}</div>
+          <div class="item-location">📍 ${item.location}</div>
+          <div class="item-pricing">
+            <div class="item-price-main">₹${Number(item.pricePerDay).toLocaleString()}<span class="item-price-unit">/day</span></div>
+            <div class="item-rating"><span class="star">★</span>${item.rating ? item.rating.toFixed(1) : 'New'}</div>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  async function saveProfile() {
+    const errEl = document.getElementById('prof-error');
+    errEl.textContent = '';
+    const data = {
+      name: document.getElementById('prof-name').value,
+      phone: document.getElementById('prof-phone').value,
+      location: document.getElementById('prof-location').value,
+      bio: document.getElementById('prof-bio').value,
+    };
+    if (!data.name) { errEl.textContent = 'Name is required'; return; }
+    try {
+      const updated = await api.put('/auth/profile', data);
+      const stored = JSON.parse(localStorage.getItem('user') || '{}');
+      localStorage.setItem('user', JSON.stringify({ ...stored, name: updated.name, location: updated.location }));
+      showToast('Profile updated!', 'success');
+      initAuth();
+      loadProfile();
+    } catch (err) { errEl.textContent = err.message; }
+  }
+
+  loadProfile();
+</script>
+</body>
+</html>
