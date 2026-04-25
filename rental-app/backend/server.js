@@ -7,11 +7,10 @@ require('dotenv').config();
 const app = express();
 
 
-// CORS Configuration (IMPORTANT for Netlify)
 app.use(cors({
   origin: [
-    "http://localhost:3000", 
-    "https://your-site.netlify.app" 
+    "http://localhost:3000",
+    "https://renthub.vercel.app" // 🔴 your actual Vercel URL
   ],
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
