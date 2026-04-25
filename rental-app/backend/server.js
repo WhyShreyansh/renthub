@@ -10,7 +10,7 @@ const app = express();
 app.use(cors({
   origin: [
     "http://localhost:3000",
-    "https://renthub.vercel.app" // 🔴 your actual Vercel URL
+    "https://renthub-git-main-whyshreyanshs-projects.vercel.app" // 🔴 your actual Vercel URL
   ],
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
