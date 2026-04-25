@@ -1,36 +1,79 @@
+const express = require('express');
+const mongoose = require('mongoose');
 const cors = require('cors');
+const path = require('path');
+require('dotenv').config();
 
-// allow your Vercel app + local dev
+const app = express();
+
+/* =======================
+   ✅ CORS CONFIG (FINAL)
+======================= */
 const allowedOrigins = [
   "http://localhost:3000",
   "https://renthub-git-main-whyshreyanshs-projects.vercel.app"
 ];
 
-// robust CORS
 app.use(cors({
   origin: function (origin, callback) {
-    // allow server-to-server / curl (no origin)
+    // allow requests without origin (Postman, mobile apps)
     if (!origin) return callback(null, true);
 
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
+    } else {
+      return callback(new Error("Not allowed by CORS"));
     }
-    return callback(new Error("Not allowed by CORS"));
   },
-  methods: ["GET","POST","PUT","DELETE","OPTIONS"],
-  allowedHeaders: ["Content-Type","Authorization"],
   credentials: true
 }));
 
-// ✅ explicitly handle preflight
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
-  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.header("Access-Control-Allow-Credentials", "true");
+// ✅ Handle preflight requests
+app.options("*", cors());
 
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
-  }
-  next();
+/* =======================
+   ✅ MIDDLEWARE
+======================= */
+app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+/* =======================
+   ✅ ROUTES
+======================= */
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/items', require('./routes/items'));
+app.use('/api/rentals', require('./routes/rentals'));
+app.use('/api/users', require('./routes/users'));
+
+/* =======================
+   ✅ ROOT ROUTE
+======================= */
+app.get('/', (req, res) => {
+  res.send('API is running...');
+});
+
+/* =======================
+   ✅ MONGODB CONNECTION
+======================= */
+const MONGO_URI = process.env.MONGO_URI;
+
+if (!MONGO_URI) {
+  console.error("❌ MONGO_URI not found in environment variables");
+  process.exit(1);
+}
+
+mongoose.connect(MONGO_URI)
+  .then(() => console.log('✅ MongoDB connected'))
+  .catch(err => {
+    console.error('MongoDB error:', err);
+    process.exit(1);
+  });
+
+/* =======================
+   ✅ START SERVER
+======================= */
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
 });
